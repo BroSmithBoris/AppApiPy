@@ -39,7 +39,7 @@ class InsertDialog(QDialog):
                 i=listArea[el]
         url = 'https://api.hh.ru/vacancies/'
         par = {'text': name,
-               'premium': 'false', 'area':i, 'per_page': '100', 'page': [el for el in range(0, 2)]}
+               'premium': 'false', 'area':i, 'per_page': '100', 'page': [el for el in range(0, 200)]}
         for i in requests.get(url, params=par).json()['items']:
             key_skills_string = ''
             vac_id = i['id']
