@@ -14,3 +14,5 @@ AppApiPy
 :black_square_button: Вкладки
 
 :black_square_button: Удаление вакансий по названию
+
+:black_square_button: Статистика по вакансиям в отдельной вкладке
