@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon
 import sqlite3
 import requests
-
+#Интерфейс
 class InsertDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(InsertDialog, self).__init__(*args, **kwargs)
@@ -14,9 +14,11 @@ class InsertDialog(QDialog):
         self.setFixedHeight(250)
         self.QBtn.clicked.connect(self.addWork)
         layout = QVBoxLayout()
+
         self.nameinput = QLineEdit()
         self.nameinput.setPlaceholderText("Название")
         layout.addWidget(self.nameinput)
+
         self.branchinput = QComboBox()
         self.branchinput.addItem("Архангельская область")
         self.branchinput.addItem("Свердловкая область")
@@ -25,21 +27,24 @@ class InsertDialog(QDialog):
         self.branchinput.addItem("Курская область")
         self.branchinput.addItem("Новгородская область")
         layout.addWidget(self.branchinput)
+
         layout.addWidget(self.QBtn)
         self.setLayout(layout)
-
+    #Функция
     def addWork(self):
         listArea={'Архангельская область':1008,'Свердловкая область':1261,'Московска область':2019,'Курская область':1308,
                   'Новгородская область':1051,'Ростовская область':1530}
         k=listArea.keys()
         name=self.nameinput.text()
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
+
         for el in k:
             if el==branch:
                 i=listArea[el]
         url = 'https://api.hh.ru/vacancies/'
         par = {'text': name,
                'premium': 'false', 'area':i, 'per_page': '100', 'page': [el for el in range(0, 2)]}
+
         for i in requests.get(url, params=par).json()['items']:
             key_skills_string = ''
             vac_id = i['id']
@@ -56,6 +61,8 @@ class InsertDialog(QDialog):
             employer = vacancy['employer']
             if employer['name'] is not None:
                 company = employer['name']
+
+            #Работа с DB
             self.conn = sqlite3.connect("Result.db")
             self.c = self.conn.cursor()
             self.c.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
@@ -64,5 +71,7 @@ class InsertDialog(QDialog):
             self.c.close()
             self.conn.close()
             self.close()
+
+
 
 

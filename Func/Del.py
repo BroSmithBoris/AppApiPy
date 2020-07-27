@@ -27,7 +27,6 @@ class DeleteDialog(QDialog):
             self.conn.commit()
             self.c.close()
             self.conn.close()
-            QMessageBox.information(QMessageBox(),'Successful','Deleted successful')
             self.close()
         except Exception:
-            QMessageBox.warning(QMessageBox(), 'Error', 'Could not Delete from the database.')
+            QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
