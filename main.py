@@ -16,7 +16,7 @@ if __name__ == '__main__':
     palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
     palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
     palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
-    palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(73, 1,89,35).lighter())
+    palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(73, 1, 89, 35).lighter())
     palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.white)
     app.setPalette(palette)
     window = MainWindow.MainWindow()
