@@ -21,11 +21,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tableWidget)
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setColumnCount(4)
-        self.tableWidget.horizontalHeader().setCascadingSectionResizes(False)
+        self.tableWidget.horizontalHeader().setCascadingSectionResizes(True)
         self.tableWidget.horizontalHeader().setSortIndicatorShown(False)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(False)
-        self.tableWidget.verticalHeader().setCascadingSectionResizes(False)
+        self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
         self.tableWidget.verticalHeader().setStretchLastSection(False)
         self.tableWidget.setHorizontalHeaderLabels(("Название","Город","Компания","Ключевые навыки"))
 

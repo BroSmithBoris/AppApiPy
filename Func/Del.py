@@ -23,7 +23,6 @@ class DeleteDialog(QDialog):
             self.conn = sqlite3.connect("Result.db")
             self.c = self.conn.cursor()
             self.c.execute("DELETE from Result")
-            self.c.execute("DELETE from Skills")
             self.conn.commit()
             self.c.close()
             self.conn.close()
