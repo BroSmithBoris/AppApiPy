@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QIntValidator
 import sqlite3
 import requests
+import re
 #Интерфейс
 class InsertDialog(QDialog):
     def __init__(self, *args, **kwargs):
@@ -24,20 +25,12 @@ class InsertDialog(QDialog):
 
         self.nameStr=QLabel()
         self.nameStr.setText("Номер страницы:")
-        self.seminput = QComboBox()
-        self.seminput.addItem("0")
-        self.seminput.addItem("1")
-        self.seminput.addItem("2")
-        self.seminput.addItem("3")
-        self.seminput.addItem("4")
-        self.seminput.addItem("5")
-        self.seminput.addItem("6")
-        self.seminput.addItem("7")
-        self.seminput.addItem("8")
-        self.seminput.addItem("9")
-        self.seminput.addItem("10")
+        self.Seminput = QLineEdit()
+        self.onlyInt=QIntValidator()
+        self.Seminput.setValidator(self.onlyInt)
+        self.Seminput.setPlaceholderText("№")
         layout.addWidget(self.nameStr)
-        layout.addWidget(self.seminput)
+        layout.addWidget(self.Seminput)
 
         self.nameStr = QLabel()
         self.nameStr.setText("Область:")
@@ -58,13 +51,13 @@ class InsertDialog(QDialog):
                   'Новгородская область':1051,'Ростовская область':1530}
         k=listArea.keys()
         name=self.nameinput.text()
-        sem = self.seminput.itemText(self.seminput.currentIndex())
+        sem = int(self.Seminput.text())
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         for el in k:
             if el==branch:
                 n=listArea[el]
         url = 'https://api.hh.ru/vacancies/'
-        par = {'text': name,'area':n,'per_page': '100','page': sem}
+        par = {'text': name,'area':n,'per_page': '50','page': sem}
         for i in requests.get(url, params=par).json()['items']:
             key_skills_string = ''
             vac_id = i['id']
