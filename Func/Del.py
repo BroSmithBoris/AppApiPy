@@ -29,4 +29,8 @@ class DeleteDialog(QDialog):
             self.conn.close()
             self.close()
         except Exception:
+<<<<<<< HEAD
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
+=======
+            QMessageBox.warning(QMessageBox(), 'Error', 'Could not Delete from the database.')
+>>>>>>> parent of 86358a0... Update Del.py
