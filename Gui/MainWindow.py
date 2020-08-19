@@ -53,6 +53,16 @@ class MainWindow(QMainWindow):
         btn_ac_delete.setStatusTip("Удалить")
         toolbar.addAction(btn_ac_delete)
 
+        file_menu = self.menuBar().addMenu("&File")
+
+        adduser_action = QAction(QIcon("icon/add.png"), "Сохранить файл", self)
+        adduser_action.triggered.connect(GuiSignal.insert)
+        file_menu.addAction(adduser_action)
+
+        about_action = QAction(QIcon("icon/info.png"), "Помощь", self)
+        about_action.triggered.connect(GuiSignal.about)
+        file_menu.addAction(about_action)
+
 
 
     def loaddata(self):

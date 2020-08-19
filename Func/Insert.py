@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QIntValidator
 import sqlite3
 import requests
-import re
+
 #Интерфейс
 class InsertDialog(QDialog):
     def __init__(self, *args, **kwargs):
