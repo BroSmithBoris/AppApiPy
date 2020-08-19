@@ -26,9 +26,8 @@ class MainWindow(QMainWindow):
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(True)
         self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
-        self.tableWidget.verticalHeader().setStretchLastSection(False)
+        self.tableWidget.verticalHeader().setStretchLastSection(True)
         self.tableWidget.setHorizontalHeaderLabels(("Название","Город","Компания","Ключевые навыки"))
-
         toolbar = QToolBar()
         toolbar.setMovable(False)
         self.addToolBar(toolbar)
@@ -46,8 +45,6 @@ class MainWindow(QMainWindow):
         btn_ac_refresh.setStatusTip("Обновить")
         toolbar.addAction(btn_ac_refresh)
 
-
-
         btn_ac_delete = QAction(QIcon("Images\Удалить.png"), "Удалить", self)
         btn_ac_delete.triggered.connect(GuiSignal.delete)
         btn_ac_delete.setStatusTip("Удалить")
@@ -56,7 +53,7 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu("&File")
 
         adduser_action = QAction(QIcon("icon/add.png"), "Сохранить файл", self)
-        adduser_action.triggered.connect(GuiSignal.insert)
+        adduser_action.triggered.connect(GuiSignal.save)
         file_menu.addAction(adduser_action)
 
         about_action = QAction(QIcon("icon/info.png"), "Помощь", self)

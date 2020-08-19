@@ -13,8 +13,12 @@ def delete():
     dlg.exec_()
 
 
-def about(self):
+def about():
     dlg = Help.AboutDialog()
+    dlg.exec_()
+
+def save():
+    dlg = Save.SaveDialog()
     dlg.exec_()
 
 

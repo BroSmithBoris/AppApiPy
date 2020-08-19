@@ -1,3 +1,4 @@
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QDialogButtonBox, QDialog
 
 
@@ -8,20 +9,14 @@ class AboutDialog(QDialog):
 
         self.setFixedWidth(300)
         self.setFixedHeight(250)
-
+        self.setWindowIcon(QIcon("Images\помощь.png"))
+        self.setWindowTitle("Помощь")
         QBtn = QDialogButtonBox.Ok
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
         layout = QVBoxLayout()
-
-        title = QLabel("HH API")
-        font = title.font()
-        font.setPointSize(20)
-        title.setFont(font)
-
-        layout.addWidget(title)
 
         layout.addWidget(QLabel("""Тут 
 может быть                           
