@@ -42,10 +42,9 @@ class SaveDialog(QDialog):
     def addSave(self):
         name = self.nameinput.text()
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
-        inputFolder =r'C:\Users\Человек\PycharmProjects\AppApi'
         try:
             if branch=="CSV":
-                csvWriter = csv.writer(open(inputFolder + '/'+name+'.csv', 'w', newline=''),delimiter=';')
+                csvWriter = csv.writer(open(name+'.csv', 'w', newline=''),delimiter=';')
                 conn = sqlite3.connect('Result.db')
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM Result")
@@ -55,7 +54,7 @@ class SaveDialog(QDialog):
 
             if branch =="JSON":
                 conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result',conn).to_json(inputFolder+'/'+name+'.json')
+                pd.read_sql_query('SELECT * FROM Result',conn).to_json(name+'.json')
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
