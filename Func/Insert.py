@@ -67,19 +67,21 @@ class InsertDialog(QDialog):
             for e in key_skills:
                 skill = e['name']
                 if skill is not None:
-                    key_skills_string += skill + ','
+                    key_skills_string += skill + ', '
+            if len(key_skills_string) > 0:
+                key_skills_string = key_skills_string[0:-2] + ';'
             area = vacancy['area']
             if area['name'] is not None:
-                town = area['name']+';'
+                town = area['name'] + ';'
             employer = vacancy['employer']
             if employer['name'] is not None:
-                company = employer['name']+';'
+                company = employer['name'] + ';'
 
             #Работа с DB
             self.conn = sqlite3.connect("Result.db")
             self.c = self.conn.cursor()
             self.c.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                       (vac_name, town, company, key_skills_string+';'))
+                       (vac_name, town, company, key_skills_string))
             self.conn.commit()
             self.c.close()
             self.conn.close()

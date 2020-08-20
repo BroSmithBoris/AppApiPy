@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
 
         btn_ac_adduser = QAction(QIcon("Images\Добавить.png"), "Добавить", self)
         btn_ac_adduser.triggered.connect(GuiSignal.insert)
+        btn_ac_adduser.triggered.connect(self.loaddata)
         btn_ac_adduser.setStatusTip("Добавить")
         toolbar.addAction(btn_ac_adduser)
 
@@ -47,6 +48,7 @@ class MainWindow(QMainWindow):
 
         btn_ac_delete = QAction(QIcon("Images\Удалить.png"), "Удалить", self)
         btn_ac_delete.triggered.connect(GuiSignal.delete)
+        btn_ac_delete.triggered.connect(self.loaddata)
         btn_ac_delete.setStatusTip("Удалить")
         toolbar.addAction(btn_ac_delete)
 
@@ -59,6 +61,7 @@ class MainWindow(QMainWindow):
         about_action = QAction(QIcon("icon/info.png"), "Помощь", self)
         about_action.triggered.connect(GuiSignal.about)
         file_menu.addAction(about_action)
+        self.loaddata()
 
 
 
