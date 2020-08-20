@@ -44,7 +44,6 @@ class SaveDialog(QDialog):
         name = self.nameinput.text()
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         inputFolder =r'C:\Users\Человек\PycharmProjects\AppApi'
-        ext='db'
         try:
             if branch=="CSV":
                 csvWriter = csv.writer(open(inputFolder + '/'+name+'.csv', 'w', newline=''),delimiter=';')
@@ -55,12 +54,14 @@ class SaveDialog(QDialog):
                 for row in rows:
                     csvWriter.writerow(row)
 
-            if branch=="XLSX":
+            if branch == "XLSX":
+                conn=sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result',conn).to_excel(inputFolder+'/'+name+'.xlsx',index=None)
+
+            if branch=="JSON":
                 conn = sqlite3.connect('Result.db')
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Result")
-                rows = cursor.fetchall()
-                pd.read_sql_query("SELECT * FROM Result").to_excel(inputFolder+'/'+name+'.xlsx')
+                pd.read_sql_query('SELECT * FROM Result',conn).to_json(inputFolder+'/'+name+'.json',index=None)
+
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
