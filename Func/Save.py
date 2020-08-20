@@ -32,7 +32,6 @@ class SaveDialog(QDialog):
         self.nameStr.setText("Формат:")
         self.branchinput = QComboBox()
         self.branchinput.addItem("CSV")
-        self.branchinput.addItem("XLSX")
         self.branchinput.addItem("JSON")
         layout.addWidget(self.nameStr)
         layout.addWidget(self.branchinput)
@@ -54,13 +53,9 @@ class SaveDialog(QDialog):
                 for row in rows:
                     csvWriter.writerow(row)
 
-            if branch == "XLSX":
-                conn=sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result',conn).to_excel(inputFolder+'/'+name+'.xlsx',index=None)
-
-            if branch=="JSON":
+            if branch =="JSON":
                 conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result',conn).to_json(inputFolder+'/'+name+'.json',index=None)
+                pd.read_sql_query('SELECT * FROM Result',conn).to_json(inputFolder+'/'+name+'.json')
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
