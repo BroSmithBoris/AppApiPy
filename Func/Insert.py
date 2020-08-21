@@ -2,6 +2,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QIntValidator
 import sqlite3
 import requests
+import concurrent
+import time
+import concurrent.futures
+from sqlite3worker import Sqlite3Worker
+
 
 #Интерфейс
 class InsertDialog(QDialog):
@@ -45,8 +50,34 @@ class InsertDialog(QDialog):
 
         layout.addWidget(self.QBtn)
         self.setLayout(layout)
+
     #Функция
     def addWork(self):
+        def request(url):
+            try:
+                vacancy = requests.get(url)
+                assert (vacancy.status_code == 200), ("Ошибка, Код ответа: ", vacancy.status_code, url)
+            except Exception as e:
+                print(e)
+                time.sleep(1)
+                return self.request(url)
+            else:
+                key_skills_string = ''
+                vacancy = vacancy.json()
+                key_skills = vacancy['key_skills']
+                for e in key_skills:
+                    skill = e['name']
+                    if skill is not None:
+                        key_skills_string += skill + ', '
+                area = vacancy['area']
+                employer = vacancy['employer']
+
+                print("check")
+                conn.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
+                               (vacancy['name'], area['name'], employer['name'], key_skills_string))
+                print(conn.queue_size)
+                return 0
+
         listArea={'Свердловкая область':1261,'Москва':1,'Курская область':1308,
                   'Новгородская область':1051,'Ростовская область':1530}
         k=listArea.keys()
@@ -54,38 +85,36 @@ class InsertDialog(QDialog):
         sem = int(self.Seminput.text())
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         for el in k:
-            if el==branch:
+            if el == branch:
                 n=listArea[el]
-        url = 'https://api.hh.ru/vacancies/'
-        par = {'text': name,'area':n,'per_page': '50','page': sem}
-        for i in requests.get(url, params=par).json()['items']:
-            key_skills_string = ''
-            vac_id = i['id']
-            vac_name = str(i['name'])+';'
-            vacancy = requests.get('https://api.hh.ru/vacancies/' + vac_id).json()
-            key_skills = vacancy['key_skills']
-            for e in key_skills:
-                skill = e['name']
-                if skill is not None:
-                    key_skills_string += skill + ', '
-            if len(key_skills_string) > 0:
-                key_skills_string = key_skills_string[0:-2] + ';'
-            area = vacancy['area']
-            if area['name'] is not None:
-                town = area['name'] + ';'
-            employer = vacancy['employer']
-            if employer['name'] is not None:
-                company = employer['name'] + ';'
 
-            #Работа с DB
-            self.conn = sqlite3.connect("Result.db")
-            self.c = self.conn.cursor()
-            self.c.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                       (vac_name, town, company, key_skills_string))
-            self.conn.commit()
-            self.c.close()
-            self.conn.close()
-            self.close()
+        count = 0
+        count_check = 0
+        page = 0
+        url = 'https://api.hh.ru/vacancies/'
+        print('ID Вакансии\tОбъявление\tГород\tКомпания\tКлючевые навыки')
+        vac_id_list = []
+        while True:
+            par = {'text': name, 'area': n, 'per_page': '100', 'page': page}
+            # 1261 -- Свердловская область
+            try:
+                items = requests.get(url, params=par).json()['items']
+            except KeyError:
+                break
+            for i in items:
+                vac_id_list.append(url + i['id'])
+                count += 1
+            if count_check == count:
+                break
+            else:
+                count_check = count
+                page += 1
+        print(count)
+        conn = Sqlite3Worker("Result.db")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=30) as pool:
+            pool.map(request, vac_id_list)
+        conn.close()
+        self.close()
 
 
 
