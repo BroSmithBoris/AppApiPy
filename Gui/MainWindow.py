@@ -9,21 +9,24 @@ from PyQt5.QtWidgets import (QApplication, QComboBox,
                              QStyleFactory, QTableWidget, QTabWidget,
                              QVBoxLayout, QWidget, QTableWidgetItem, QMessageBox)
 import sqlite3
+import concurrent
+import time
+import concurrent.futures
+from sqlite3worker import Sqlite3Worker
 
 class WidgetGallery(QDialog):
     def __init__(self, parent=None):
         super(WidgetGallery, self).__init__(parent)
 
-        self.createTopLeftGroupBox()
-        self.createTopRightGroupBox()
-        self.createBottomLeftTabWidget()
-        self.createBottomRightGroupBox()
-        self.createProgressBar()
+        self.create_top_left_group_box()
+        self.create_top_right_group_box()
+        self.create_bottom_left_tab_widget()
+        self.create_bottom_right_group_box()
 
         mainLayout = QGridLayout()
         mainLayout.addWidget(self.topLeftGroupBox, 2, 0)
         mainLayout.addWidget(self.topRightGroupBox, 3, 0)
-        mainLayout.addWidget(self.bottomLeftTabWidget, 1,1,3,3)
+        mainLayout.addWidget(self.bottomLeftTabWidget, 1, 1, 3, 3)
         mainLayout.addWidget(self.bottomRightGroupBox, 1, 0)
         mainLayout.setRowStretch(1, 1)
         mainLayout.setRowStretch(2, 1)
@@ -34,12 +37,12 @@ class WidgetGallery(QDialog):
         self.setWindowTitle("HH API")
         self.setMinimumSize(800, 600)
 
-    def advanceProgressBar(self):
+    def advance_progress_bar(self):
         curVal = self.progressBar.value()
         maxVal = self.progressBar.maximum()
         self.progressBar.setValue(curVal + (maxVal - curVal) // 100)
 
-    def createTopLeftGroupBox(self):
+    def create_top_left_group_box(self):
         self.topLeftGroupBox = QGroupBox("Сохранение")
 
         nameStr = QLabel()
@@ -53,7 +56,7 @@ class WidgetGallery(QDialog):
         self.branchinput.addItem("JSON")
 
         QBtnSave = QPushButton("Сохранить")
-        QBtnSave.clicked.connect(self.addSave)
+        QBtnSave.clicked.connect(self.add_save)
         layout = QVBoxLayout()
         layout.addWidget(nameStr)
         layout.addWidget(self.nameinput)
@@ -63,12 +66,12 @@ class WidgetGallery(QDialog):
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
-    def addSave(self):
+    def add_save(self):
         name = self.nameinput.text()
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         try:
-            if branch=="CSV":
-                csvWriter = csv.writer(open(name+'.csv', 'w', newline=''),delimiter=';')
+            if branch == "CSV":
+                csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
                 conn = sqlite3.connect('Result.db')
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM Result")
@@ -76,46 +79,45 @@ class WidgetGallery(QDialog):
                 for row in rows:
                     csvWriter.writerow(row)
 
-            if branch =="JSON":
+            if branch == "JSON":
                 conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result',conn).to_json(name+'.json')
+                pd.read_sql_query('SELECT * FROM Result', conn).to_json(name + '.json')
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
 
-
-    def createTopRightGroupBox(self):
+    def create_top_right_group_box(self):
         self.topRightGroupBox = QGroupBox("Удалить все")
 
         defaultPushButton = QPushButton("Удалить все")
-        defaultPushButton.clicked.connect(self.deleteAllWorks)
+        defaultPushButton.clicked.connect(self.delete_all_works)
 
         layout = QVBoxLayout()
         layout.addWidget(defaultPushButton)
         layout.addStretch(1)
         self.topRightGroupBox.setLayout(layout)
 
-    def deleteAllWorks(self):
+    def delete_all_works(self):
         try:
             self.conn = sqlite3.connect("Result.db")
             self.c = self.conn.cursor()
             self.c.execute("DELETE from Result")
             self.conn.commit()
             self.conn.close()
-            self.loaddata()
+            self.load_data()
             QMessageBox.information(QMessageBox(), 'Successful', 'Удаленно')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
 
-    def createBottomLeftTabWidget(self):
+    def create_bottom_left_tab_widget(self):
         self.conn = sqlite3.connect("Result.db")
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
         self.c.close()
         self.bottomLeftTabWidget = QTabWidget()
         self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Preferred,
-                QSizePolicy.Ignored)
+                                               QSizePolicy.Ignored)
 
         tab1 = QWidget()
         self.tableWidget = QTableWidget()
@@ -128,16 +130,14 @@ class WidgetGallery(QDialog):
         self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
         self.tableWidget.verticalHeader().setStretchLastSection(False)
         self.tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
-        self.loaddata()
+        self.load_data()
         tab1hbox = QHBoxLayout()
 
         tab1hbox.addWidget(self.tableWidget)
         tab1.setLayout(tab1hbox)
 
         tab2 = QWidget()
-        textEdit = QLabel("""Инструкция
-пользователю""")
-
+        textEdit = QLabel("Инструкция\nпользователю")
 
         tab2hbox = QHBoxLayout()
         tab2hbox.addWidget(textEdit)
@@ -146,9 +146,8 @@ class WidgetGallery(QDialog):
         self.bottomLeftTabWidget.addTab(tab1, "&Table")
         self.bottomLeftTabWidget.addTab(tab2, "Help")
 
-    def createBottomRightGroupBox(self):
+    def create_bottom_right_group_box(self):
         self.bottomRightGroupBox = QGroupBox("Добавить вакансии")
-
 
         self.name_Vac = QLineEdit()
         self.name_Vac.setPlaceholderText("Название")
@@ -161,7 +160,7 @@ class WidgetGallery(QDialog):
         self.branchinput.addItem("Новгородская область")
 
         QBtn = QPushButton("Добавить")
-        QBtn.clicked.connect(self.addWork)
+        QBtn.clicked.connect(self.add_work)
 
         layout = QGridLayout()
         layout.addWidget(self.name_Vac, 0, 0, 1, 2)
@@ -170,58 +169,61 @@ class WidgetGallery(QDialog):
         layout.setRowStretch(5, 1)
         self.bottomRightGroupBox.setLayout(layout)
 
-    def addWork(self):
-        listArea={'Свердловкая область':1261,'Москва':1,'Курская область':1308,
-                  'Новгородская область':1051,'Ростовская область':1530}
-        k=listArea.keys()
-        name=self.nameinput.text()
+    def add_work(self):
+        def request_items(page):
+            vac_id_list = []
+            par = {'text': name, 'area': n, 'per_page': '100', 'page': page}
+            try:
+                items = requests.get(url, params=par).json()['items']
+            except KeyError:
+                return
+            for i in items:
+                vac_id_list.append(url + i['id'])
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+                pool.map(request_vac_id, vac_id_list)
+
+        def request_vac_id(vac_url):
+            try:
+                vacancy = requests.get(vac_url)
+                assert (vacancy.status_code == 200), ("Ошибка, Код ответа: ", vacancy.status_code, vac_url)
+            except Exception as e:
+                print(e)
+                time.sleep(5)
+                return request_vac_id(vac_url)
+            else:
+                key_skills_string = ''
+                vacancy = vacancy.json()
+                key_skills = vacancy['key_skills']
+                for e in key_skills:
+                    skill = e['name']
+                    if skill is not None:
+                        key_skills_string += skill + ', '
+                if len(key_skills_string) > 0:
+                    key_skills_string = key_skills_string[0,-2]
+                area = vacancy['area']
+                employer = vacancy['employer']
+
+                conn.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
+                             (vacancy['name'], area['name'], employer['name'], key_skills_string))
+                print(conn.queue_size)
+                return 0
+
+        listArea = {'Свердловкая область': 1261, 'Москва': 1, 'Курская область': 1308,
+                    'Новгородская область': 1051, 'Ростовская область': 1530}
+        k = listArea.keys()
+        name = self.nameinput.text()
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         for el in k:
-            if el==branch:
-                n=listArea[el]
+            if el == branch:
+                n = listArea[el]
         url = 'https://api.hh.ru/vacancies/'
-        par = {'text': name,'area':n,'per_page': '50','page': 0}
-        for i in requests.get(url, params=par).json()['items']:
-            key_skills_string = ''
-            vac_id = i['id']
-            vac_name = str(i['name'])+';'
-            vacancy = requests.get('https://api.hh.ru/vacancies/' + vac_id).json()
-            key_skills = vacancy['key_skills']
-            for e in key_skills:
-                skill = e['name']
-                if skill is not None:
-                    key_skills_string += skill + ', '
-            if len(key_skills_string) > 0:
-                key_skills_string = key_skills_string[0:-2] + ';'
-            area = vacancy['area']
-            if area['name'] is not None:
-                town = area['name'] + ';'
-            employer = vacancy['employer']
-            if employer['name'] is not None:
-                company = employer['name'] + ';'
+        conn = Sqlite3Worker("Result.db")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+            pool.map(request_items, range(20))
+        conn.close()
+        self.load_data()
 
-            #Работа с DB
-            self.conn = sqlite3.connect("Result.db")
-            self.c = self.conn.cursor()
-            self.c.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                       (vac_name, town, company, key_skills_string))
-            self.conn.commit()
-            self.c.close()
-            self.conn.close()
-            self.loaddata()
-
-
-
-    def createProgressBar(self):
-        self.progressBar = QProgressBar()
-        self.progressBar.setRange(0, 10000)
-        self.progressBar.setValue(0)
-
-        timer = QTimer(self)
-        timer.timeout.connect(self.advanceProgressBar)
-        timer.start(1000)
-
-    def loaddata(self):
+    def load_data(self):
         self.connection = sqlite3.connect("Result.db")
         query = "SELECT * FROM Result"
         result = self.connection.execute(query)
@@ -232,7 +234,7 @@ class WidgetGallery(QDialog):
                 self.tableWidget.setItem(row_number, column_number, QTableWidgetItem(str(data)))
         self.connection.close()
 
-    def handlePaintRequest(self, printer):
+    def handle_paint_request(self, printer):
         document = QTextDocument()
         cursor = QTextCursor(document)
         model = self.table.model()
@@ -243,4 +245,3 @@ class WidgetGallery(QDialog):
                 cursor.insertText(model.item(row, column).text())
                 cursor.movePosition(QTextCursor.NextCell)
         document.print_(printer)
-
