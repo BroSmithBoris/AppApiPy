@@ -1,7 +1,7 @@
 import csv
 import pandas as pd
-import xlsxwriter
 import requests
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QTextDocument, QTextCursor
 from PyQt5.QtWidgets import (QApplication, QComboBox,
@@ -14,7 +14,7 @@ import concurrent
 import time
 import concurrent.futures
 from sqlite3worker import Sqlite3Worker
-
+from Func import Help
 
 class WidgetGallery(QDialog):
     def __init__(self, parent=None):
@@ -38,6 +38,8 @@ class WidgetGallery(QDialog):
 
         self.setWindowTitle("HH API")
         self.setMinimumSize(800, 600)
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint
+                            | QtCore.Qt.WindowMaximizeButtonHint)
 
     def advance_progress_bar(self):
         curVal = self.progressBar.value()
@@ -53,10 +55,9 @@ class WidgetGallery(QDialog):
         self.nameinput.setPlaceholderText("Имя")
         nameStrForm = QLabel()
         nameStrForm.setText("Формат:")
-        self.formatbranchinput = QComboBox()
-        self.formatbranchinput.addItem("CSV")
-        self.formatbranchinput.addItem("JSON")
-        self.formatbranchinput.addItem("XLSX")
+        self.branchinput = QComboBox()
+        self.branchinput.addItem("CSV")
+        self.branchinput.addItem("JSON")
 
         QBtnSave = QPushButton("Сохранить")
         QBtnSave.clicked.connect(self.add_save)
@@ -64,14 +65,14 @@ class WidgetGallery(QDialog):
         layout.addWidget(nameStr)
         layout.addWidget(self.nameinput)
         layout.addWidget(nameStrForm)
-        layout.addWidget(self.formatbranchinput)
+        layout.addWidget(self.branchinput)
         layout.addWidget(QBtnSave)
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
     def add_save(self):
         name = self.nameinput.text()
-        branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
+        branch = self.branchinput.itemText(self.branchinput.currentIndex())
         try:
             if branch == "CSV":
                 csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
@@ -83,23 +84,18 @@ class WidgetGallery(QDialog):
                     csvWriter.writerow(row)
 
             if branch == "JSON":
-                self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_json(name + '.json')
-
-            if branch == "XLSX":
-                self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx',
-                    header=['Название', 'Город', 'Компания', 'Ключевые навыки'], index=False)
+                conn = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', conn).to_json(name + '.json')
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
 
     def create_top_right_group_box(self):
-        self.topRightGroupBox = QGroupBox("Удалить все")
+        self.topRightGroupBox = QGroupBox()
 
-        defaultPushButton = QPushButton("Удалить все")
-        defaultPushButton.clicked.connect(self.delete_all_works)
+        defaultPushButton = QPushButton("Помощь")
+        defaultPushButton.clicked.connect(self.about)
 
         layout = QVBoxLayout()
         layout.addWidget(defaultPushButton)
@@ -107,7 +103,12 @@ class WidgetGallery(QDialog):
         self.topRightGroupBox.setLayout(layout)
 
     def delete_all_works(self):
-        try:
+        message = 'Вы уверены, что хотите продолжить?'
+        reply = QtWidgets.QMessageBox.question(self, 'Уведомление', message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+
+        if reply == QtWidgets.QMessageBox.Yes:
             self.conn = sqlite3.connect("Result.db")
             self.c = self.conn.cursor()
             self.c.execute("DELETE from Result")
@@ -115,19 +116,19 @@ class WidgetGallery(QDialog):
             self.conn.close()
             self.load_data()
             QMessageBox.information(QMessageBox(), 'Successful', 'Удаленно')
-        except Exception:
+        elif reply==QtWidgets.QMessageBox.No:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
+
 
     def create_bottom_left_tab_widget(self):
         self.conn = sqlite3.connect("Result.db")
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
         self.c.close()
-        self.bottomLeftTabWidget = QTabWidget()
+        self.bottomLeftTabWidget = QGroupBox()
         self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Preferred,
                                                QSizePolicy.Ignored)
 
-        tab1 = QWidget()
         self.tableWidget = QTableWidget()
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setColumnCount(4)
@@ -140,19 +141,12 @@ class WidgetGallery(QDialog):
         self.tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
         self.load_data()
         tab1hbox = QHBoxLayout()
-
         tab1hbox.addWidget(self.tableWidget)
-        tab1.setLayout(tab1hbox)
+        self.bottomLeftTabWidget.setLayout(tab1hbox)
 
-        tab2 = QWidget()
-        textEdit = QLabel("Инструкция\nпользователю")
-
-        tab2hbox = QHBoxLayout()
-        tab2hbox.addWidget(textEdit)
-        tab2.setLayout(tab2hbox)
-
-        self.bottomLeftTabWidget.addTab(tab1, "&Table")
-        self.bottomLeftTabWidget.addTab(tab2, "Help")
+    def about(self):
+        dlg = Help.AboutDialog()
+        dlg.exec_()
 
     def create_bottom_right_group_box(self):
         self.bottomRightGroupBox = QGroupBox("Добавить вакансии")
@@ -169,11 +163,14 @@ class WidgetGallery(QDialog):
 
         QBtn = QPushButton("Добавить")
         QBtn.clicked.connect(self.add_work)
+        defaultPushButton = QPushButton("Удалить все")
+        defaultPushButton.clicked.connect(self.delete_all_works)
 
         layout = QGridLayout()
         layout.addWidget(self.name_Vac, 0, 0, 1, 2)
         layout.addWidget(self.branchinput, 1, 0, 1, 2)
         layout.addWidget(QBtn, 2, 0, 1, 2)
+        layout.addWidget(defaultPushButton, 3, 0, 1, 2)
         layout.setRowStretch(5, 1)
         self.bottomRightGroupBox.setLayout(layout)
 
@@ -206,6 +203,8 @@ class WidgetGallery(QDialog):
                     skill = e['name']
                     if skill is not None:
                         key_skills_string += skill + ', '
+                if len(key_skills_string) > 0:
+                    key_skills_string = key_skills_string[0,-2]
                 area = vacancy['area']
                 employer = vacancy['employer']
 
