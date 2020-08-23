@@ -1,5 +1,6 @@
 import csv
 import pandas as pd
+import xlrd
 import requests
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QTextDocument, QTextCursor
@@ -51,9 +52,9 @@ class WidgetGallery(QDialog):
         self.nameinput.setPlaceholderText("Имя")
         nameStrForm = QLabel()
         nameStrForm.setText("Формат:")
-        self.branchinput = QComboBox()
-        self.branchinput.addItem("CSV")
-        self.branchinput.addItem("JSON")
+        self.formatbranchinput = QComboBox()
+        self.formatbranchinput.addItem("CSV")
+        self.formatbranchinput.addItem("JSON")
 
         QBtnSave = QPushButton("Сохранить")
         QBtnSave.clicked.connect(self.add_save)
@@ -61,28 +62,23 @@ class WidgetGallery(QDialog):
         layout.addWidget(nameStr)
         layout.addWidget(self.nameinput)
         layout.addWidget(nameStrForm)
-        layout.addWidget(self.branchinput)
+        layout.addWidget(self.formatbranchinput)
         layout.addWidget(QBtnSave)
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
     def add_save(self):
         name = self.nameinput.text()
-        branch = self.branchinput.itemText(self.branchinput.currentIndex())
+        branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
         try:
+            print(branch)
             if branch == "CSV":
-                csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
-                conn = sqlite3.connect('Result.db')
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Result")
-                rows = cursor.fetchall()
-                for row in rows:
-                    csvWriter.writerow(row)
+                self.conn = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_csv(name + '.cvs')
 
             if branch == "JSON":
-                conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', conn).to_json(name + '.json')
-
+                self.conn = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_json(name + '.json')
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
@@ -198,8 +194,6 @@ class WidgetGallery(QDialog):
                     skill = e['name']
                     if skill is not None:
                         key_skills_string += skill + ', '
-                if len(key_skills_string) > 0:
-                    key_skills_string = key_skills_string[0,-2]
                 area = vacancy['area']
                 employer = vacancy['employer']
 
