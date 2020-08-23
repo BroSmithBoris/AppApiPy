@@ -131,7 +131,7 @@ class WidgetGallery(QDialog):
         self.loaddata
         tab1hbox = QHBoxLayout()
 
-        tab1hbox.addWidget(tableWidget)
+        tab1hbox.addWidget(self.tableWidget)
         tab1.setLayout(tab1hbox)
 
         tab2 = QWidget()
