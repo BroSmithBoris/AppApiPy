@@ -19,6 +19,6 @@ if __name__ == '__main__':
     palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(73, 1, 89, 35).lighter())
     palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.white)
     app.setPalette(palette)
-    window = MainWindow.MainWindow()
+    window = MainWindow.WidgetGallery()
     window.show()
     sys.exit(app.exec_())
