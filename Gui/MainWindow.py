@@ -88,7 +88,8 @@ class WidgetGallery(QDialog):
 
             if branch == "XLSX":
                 self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx',
+                    header=['Название', 'Город', 'Компания', 'Ключевые навыки'], index=False)
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
