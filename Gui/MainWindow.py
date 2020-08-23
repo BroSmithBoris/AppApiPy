@@ -103,7 +103,7 @@ class WidgetGallery(QDialog):
             self.c.execute("DELETE from Result")
             self.conn.commit()
             self.conn.close()
-            self.loaddata
+            self.loaddata()
             QMessageBox.information(QMessageBox(), 'Successful', 'Удаленно')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
@@ -128,7 +128,7 @@ class WidgetGallery(QDialog):
         self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
         self.tableWidget.verticalHeader().setStretchLastSection(False)
         self.tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
-        self.loaddata
+        self.loaddata()
         tab1hbox = QHBoxLayout()
 
         tab1hbox.addWidget(self.tableWidget)
@@ -208,7 +208,7 @@ class WidgetGallery(QDialog):
             self.conn.commit()
             self.c.close()
             self.conn.close()
-            self.loaddata
+            self.loaddata()
 
 
 
