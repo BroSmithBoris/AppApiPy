@@ -109,21 +109,25 @@ class WidgetGallery(QDialog):
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
 
     def createBottomLeftTabWidget(self):
+        self.conn = sqlite3.connect("Result.db")
+        self.c = self.conn.cursor()
+        self.c.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
+        self.c.close()
         self.bottomLeftTabWidget = QTabWidget()
         self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Preferred,
                 QSizePolicy.Ignored)
 
         tab1 = QWidget()
-        tableWidget = QTableWidget()
-        tableWidget.setAlternatingRowColors(True)
-        tableWidget.setColumnCount(4)
-        tableWidget.horizontalHeader().setCascadingSectionResizes(True)
-        tableWidget.horizontalHeader().setSortIndicatorShown(False)
-        tableWidget.horizontalHeader().setStretchLastSection(True)
-        tableWidget.verticalHeader().setVisible(True)
-        tableWidget.verticalHeader().setCascadingSectionResizes(True)
-        tableWidget.verticalHeader().setStretchLastSection(False)
-        tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
+        self.tableWidget = QTableWidget()
+        self.tableWidget.setAlternatingRowColors(True)
+        self.tableWidget.setColumnCount(4)
+        self.tableWidget.horizontalHeader().setCascadingSectionResizes(True)
+        self.tableWidget.horizontalHeader().setSortIndicatorShown(False)
+        self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.verticalHeader().setVisible(True)
+        self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
+        self.tableWidget.verticalHeader().setStretchLastSection(False)
+        self.tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
         self.loaddata
         tab1hbox = QHBoxLayout()
 
