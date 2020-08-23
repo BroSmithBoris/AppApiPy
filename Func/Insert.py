@@ -8,7 +8,7 @@ import concurrent.futures
 from sqlite3worker import Sqlite3Worker
 
 
-#Интерфейс
+# Интерфейс
 class InsertDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(InsertDialog, self).__init__(*args, **kwargs)
@@ -18,20 +18,20 @@ class InsertDialog(QDialog):
         self.setWindowIcon(QIcon("Images\Добавить.png"))
         self.setFixedWidth(300)
         self.setFixedHeight(250)
-        self.QBtn.clicked.connect(self.addWork)
+        self.QBtn.clicked.connect(self.add_work)
         layout = QVBoxLayout()
 
-        self.nameStr=QLabel()
+        self.nameStr = QLabel()
         self.nameStr.setText("Название вакансии:")
         self.nameinput = QLineEdit()
         self.nameinput.setPlaceholderText("Название")
         layout.addWidget(self.nameStr)
         layout.addWidget(self.nameinput)
 
-        self.nameStr=QLabel()
+        self.nameStr = QLabel()
         self.nameStr.setText("Номер страницы:")
         self.Seminput = QLineEdit()
-        self.onlyInt=QIntValidator()
+        self.onlyInt = QIntValidator()
         self.Seminput.setValidator(self.onlyInt)
         self.Seminput.setPlaceholderText("№")
         layout.addWidget(self.nameStr)
@@ -51,16 +51,28 @@ class InsertDialog(QDialog):
         layout.addWidget(self.QBtn)
         self.setLayout(layout)
 
-    #Функция
-    def addWork(self):
-        def request(url):
+    # Функция
+    def add_work(self):
+        def request_items(page):
+            vac_id_list = []
+            par = {'text': name, 'area': n, 'per_page': '100', 'page': page}
             try:
-                vacancy = requests.get(url)
-                assert (vacancy.status_code == 200), ("Ошибка, Код ответа: ", vacancy.status_code, url)
+                items = requests.get(url, params=par).json()['items']
+            except KeyError:
+                return
+            for i in items:
+                vac_id_list.append(url + i['id'])
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+                pool.map(request_vac_id, vac_id_list)
+
+        def request_vac_id(vac_url):
+            try:
+                vacancy = requests.get(vac_url)
+                assert (vacancy.status_code == 200), ("Ошибка, Код ответа: ", vacancy.status_code, vac_url)
             except Exception as e:
                 print(e)
-                time.sleep(1)
-                return self.request(url)
+                time.sleep(5)
+                return request_vac_id(vac_url)
             else:
                 key_skills_string = ''
                 vacancy = vacancy.json()
@@ -72,50 +84,23 @@ class InsertDialog(QDialog):
                 area = vacancy['area']
                 employer = vacancy['employer']
 
-                print("check")
                 conn.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                               (vacancy['name'], area['name'], employer['name'], key_skills_string))
+                             (vacancy['name'], area['name'], employer['name'], key_skills_string))
                 print(conn.queue_size)
                 return 0
 
-        listArea={'Свердловкая область':1261,'Москва':1,'Курская область':1308,
-                  'Новгородская область':1051,'Ростовская область':1530}
-        k=listArea.keys()
-        name=self.nameinput.text()
+        listArea = {'Свердловкая область': 1261, 'Москва': 1, 'Курская область': 1308,
+                    'Новгородская область': 1051, 'Ростовская область': 1530}
+        k = listArea.keys()
+        name = self.nameinput.text()
         sem = int(self.Seminput.text())
         branch = self.branchinput.itemText(self.branchinput.currentIndex())
         for el in k:
             if el == branch:
-                n=listArea[el]
-
-        count = 0
-        count_check = 0
-        page = 0
+                n = listArea[el]
         url = 'https://api.hh.ru/vacancies/'
-        print('ID Вакансии\tОбъявление\tГород\tКомпания\tКлючевые навыки')
-        vac_id_list = []
-        while True:
-            par = {'text': name, 'area': n, 'per_page': '100', 'page': page}
-            # 1261 -- Свердловская область
-            try:
-                items = requests.get(url, params=par).json()['items']
-            except KeyError:
-                break
-            for i in items:
-                vac_id_list.append(url + i['id'])
-                count += 1
-            if count_check == count:
-                break
-            else:
-                count_check = count
-                page += 1
-        print(count)
         conn = Sqlite3Worker("Result.db")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=30) as pool:
-            pool.map(request, vac_id_list)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+            pool.map(request_items, range(19))
         conn.close()
         self.close()
-
-
-
-
