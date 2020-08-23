@@ -15,6 +15,7 @@ import time
 import concurrent.futures
 from sqlite3worker import Sqlite3Worker
 
+
 class WidgetGallery(QDialog):
     def __init__(self, parent=None):
         super(WidgetGallery, self).__init__(parent)
@@ -73,7 +74,7 @@ class WidgetGallery(QDialog):
         branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
         try:
             if branch == "CSV":
-                csvWriter = csv.writer(open(name+'.csv', 'w', newline=''),delimiter=';')
+                csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
                 conn = sqlite3.connect('Result.db')
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM Result")
@@ -87,7 +88,7 @@ class WidgetGallery(QDialog):
 
             if branch == "XLSX":
                 self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx', engine='xlsxwriter')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx')
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
