@@ -1,6 +1,6 @@
 import csv
 import pandas as pd
-import xlrd
+import xlsxwriter
 import requests
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QTextDocument, QTextCursor
@@ -55,6 +55,7 @@ class WidgetGallery(QDialog):
         self.formatbranchinput = QComboBox()
         self.formatbranchinput.addItem("CSV")
         self.formatbranchinput.addItem("JSON")
+        self.formatbranchinput.addItem("XLSX")
 
         QBtnSave = QPushButton("Сохранить")
         QBtnSave.clicked.connect(self.add_save)
@@ -71,14 +72,23 @@ class WidgetGallery(QDialog):
         name = self.nameinput.text()
         branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
         try:
-            print(branch)
             if branch == "CSV":
-                self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_csv(name + '.cvs')
+                csvWriter = csv.writer(open(name+'.csv', 'w', newline=''),delimiter=';')
+                conn = sqlite3.connect('Result.db')
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM Result")
+                rows = cursor.fetchall()
+                for row in rows:
+                    csvWriter.writerow(row)
 
             if branch == "JSON":
                 self.conn = sqlite3.connect('Result.db')
                 pd.read_sql_query('SELECT * FROM Result', self.conn).to_json(name + '.json')
+
+            if branch == "XLSX":
+                self.conn = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx', engine='xlsxwriter')
+
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
