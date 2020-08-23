@@ -104,6 +104,7 @@ class WidgetGallery(QDialog):
             self.c.execute("DELETE from Result")
             self.conn.commit()
             self.conn.close()
+            self.loaddata
             QMessageBox.information(QMessageBox(), 'Successful', 'Удаленно')
         except Exception:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
@@ -124,16 +125,7 @@ class WidgetGallery(QDialog):
         tableWidget.verticalHeader().setCascadingSectionResizes(True)
         tableWidget.verticalHeader().setStretchLastSection(False)
         tableWidget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
-        self.connection = sqlite3.connect("Result.db")
-        query = "SELECT * FROM Result"
-        result = self.connection.execute(query)
-        tableWidget.setRowCount(0)
-        for row_number, row_data in enumerate(result):
-            tableWidget.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                    tableWidget.setItem(row_number, column_number,QTableWidgetItem(str(data)))
-        self.connection.close()
-
+        self.loaddata
         tab1hbox = QHBoxLayout()
 
         tab1hbox.addWidget(tableWidget)
@@ -213,6 +205,7 @@ class WidgetGallery(QDialog):
             self.conn.commit()
             self.c.close()
             self.conn.close()
+            self.loaddata
 
 
 
@@ -225,6 +218,16 @@ class WidgetGallery(QDialog):
         timer.timeout.connect(self.advanceProgressBar)
         timer.start(1000)
 
+    def loaddata(self):
+        self.connection = sqlite3.connect("Result.db")
+        query = "SELECT * FROM Result"
+        result = self.connection.execute(query)
+        self.tableWidget.setRowCount(0)
+        for row_number, row_data in enumerate(result):
+            self.tableWidget.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                self.tableWidget.setItem(row_number, column_number, QTableWidgetItem(str(data)))
+        self.connection.close()
 
     def handlePaintRequest(self, printer):
         document = QTextDocument()
