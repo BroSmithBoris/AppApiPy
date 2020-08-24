@@ -53,30 +53,30 @@ class WidgetGallery(QDialog):
 
         nameStr = QLabel()
         nameStr.setText("Имя файла:")
-        self.nameinput = QLineEdit()
-        self.nameinput.setPlaceholderText("Имя")
+        self.saveNameInput = QLineEdit()
+        self.saveNameInput.setPlaceholderText("Имя")
         nameStrForm = QLabel()
         nameStrForm.setText("Формат:")
-        self.formatbranchinput = QComboBox()
-        self.formatbranchinput.addItem("CSV")
-        self.formatbranchinput.addItem("JSON")
-        self.formatbranchinput.addItem("XLSX")
+        self.formatBranchInput = QComboBox()
+        self.formatBranchInput.addItem("CSV")
+        self.formatBranchInput.addItem("JSON")
+        self.formatBranchInput.addItem("XLSX")
 
 
         QBtnSave = QPushButton("Сохранить")
         QBtnSave.clicked.connect(self.add_save)
         layout = QVBoxLayout()
         layout.addWidget(nameStr)
-        layout.addWidget(self.nameinput)
+        layout.addWidget(self.saveNameInput)
         layout.addWidget(nameStrForm)
-        layout.addWidget(self.formatbranchinput)
+        layout.addWidget(self.formatBranchInput)
         layout.addWidget(QBtnSave)
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
     def add_save(self):
-        name = self.nameinput.text()
-        branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
+        name = self.saveNameInput.text()
+        branch = self.formatBranchInput.itemText(self.formatBranchInput.currentIndex())
         try:
             if branch == "CSV":
                 csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
@@ -92,9 +92,9 @@ class WidgetGallery(QDialog):
                 pd.read_sql_query('SELECT * FROM Result', conn).to_json(name + '.json')
 
             if branch == "XLSX":
-                self.conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx',
-                    header=['Название', 'Город', 'Компания', 'Ключевые навыки'], index=False)
+                self.connect = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', self.connect).to_excel(name + '.xlsx',
+                                                                                 header=['Название', 'Город', 'Компания', 'Ключевые навыки'], index=False)
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
@@ -118,22 +118,21 @@ class WidgetGallery(QDialog):
                                                QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
-            self.conn = sqlite3.connect("Result.db")
-            self.c = self.conn.cursor()
-            self.c.execute("DELETE from Result")
-            self.conn.commit()
-            self.conn.close()
+            self.connect = sqlite3.connect("Result.db")
+            self.cursor = self.connect.cursor()
+            self.cursor.execute("DELETE from Result")
+            self.connect.commit()
+            self.connect.close()
             self.load_data()
             QMessageBox.information(QMessageBox(), 'Successful', 'Удаленно')
         elif reply==QtWidgets.QMessageBox.No:
             QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось удалить вакансии')
 
-
     def create_bottom_left_tab_widget(self):
-        self.conn = sqlite3.connect("Result.db")
-        self.c = self.conn.cursor()
-        self.c.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
-        self.c.close()
+        self.connect = sqlite3.connect("Result.db")
+        self.cursor = self.connect.cursor()
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
+        self.cursor.close()
         self.bottomLeftTabWidget = QGroupBox()
         self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Preferred,
                                                QSizePolicy.Ignored)
@@ -160,15 +159,15 @@ class WidgetGallery(QDialog):
     def create_bottom_right_group_box(self):
         self.bottomRightGroupBox = QGroupBox("Добавить вакансии")
 
-        self.name_Vac = QLineEdit()
-        self.name_Vac.setPlaceholderText("Название")
+        self.vacancyNameInput = QLineEdit()
+        self.vacancyNameInput.setPlaceholderText("Название")
 
-        self.branchinput = QComboBox()
-        self.branchinput.addItem("Свердловкая область")
-        self.branchinput.addItem("Москва")
-        self.branchinput.addItem("Ростовская область")
-        self.branchinput.addItem("Курская область")
-        self.branchinput.addItem("Новгородская область")
+        self.regionBranchInput = QComboBox()
+        self.regionBranchInput.addItem("Свердловкая область")
+        self.regionBranchInput.addItem("Москва")
+        self.regionBranchInput.addItem("Ростовская область")
+        self.regionBranchInput.addItem("Курская область")
+        self.regionBranchInput.addItem("Новгородская область")
 
         QBtn = QPushButton("Добавить")
         QBtn.clicked.connect(self.add_work)
@@ -176,8 +175,8 @@ class WidgetGallery(QDialog):
         defaultPushButton.clicked.connect(self.delete_all_works)
 
         layout = QGridLayout()
-        layout.addWidget(self.name_Vac, 0, 0, 1, 2)
-        layout.addWidget(self.branchinput, 1, 0, 1, 2)
+        layout.addWidget(self.vacancyNameInput, 0, 0, 1, 2)
+        layout.addWidget(self.regionBranchInput, 1, 0, 1, 2)
         layout.addWidget(QBtn, 2, 0, 1, 2)
         layout.addWidget(defaultPushButton, 3, 0, 1, 2)
         layout.setRowStretch(5, 1)
@@ -193,7 +192,7 @@ class WidgetGallery(QDialog):
                 return
             for i in items:
                 vac_id_list.append(url + i['id'])
-            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
                 pool.map(request_vac_id, vac_id_list)
 
         def request_vac_id(vac_url):
@@ -212,8 +211,6 @@ class WidgetGallery(QDialog):
                     skill = e['name']
                     if skill is not None:
                         key_skills_string += skill + ', '
-                if len(key_skills_string) > 0:
-                    key_skills_string = key_skills_string[0,-2]
                 area = vacancy['area']
                 employer = vacancy['employer']
 
@@ -225,8 +222,8 @@ class WidgetGallery(QDialog):
         listArea = {'Свердловкая область': 1261, 'Москва': 1, 'Курская область': 1308,
                     'Новгородская область': 1051, 'Ростовская область': 1530}
         k = listArea.keys()
-        name = self.nameinput.text()
-        branch = self.branchinput.itemText(self.formatbranchinput.currentIndex())
+        name = self.vacancyNameInput.text()
+        branch = self.regionBranchInput.itemText(self.formatBranchInput.currentIndex())
         for el in k:
             if el == branch:
                 n = listArea[el]
