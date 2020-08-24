@@ -1,9 +1,10 @@
 import csv
+import xlsxwriter
 import pandas as pd
 import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QTextDocument, QTextCursor
+from PyQt5.QtGui import QTextDocument, QTextCursor, QIcon
 from PyQt5.QtWidgets import (QApplication, QComboBox,
                              QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
                              QProgressBar, QPushButton, QSizePolicy,
@@ -38,6 +39,7 @@ class WidgetGallery(QDialog):
 
         self.setWindowTitle("HH API")
         self.setMinimumSize(800, 600)
+        self.setWindowIcon(QIcon("Images\Иконка.png"))
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint
                             | QtCore.Qt.WindowMaximizeButtonHint)
 
@@ -55,9 +57,11 @@ class WidgetGallery(QDialog):
         self.nameinput.setPlaceholderText("Имя")
         nameStrForm = QLabel()
         nameStrForm.setText("Формат:")
-        self.branchinput = QComboBox()
-        self.branchinput.addItem("CSV")
-        self.branchinput.addItem("JSON")
+        self.formatbranchinput = QComboBox()
+        self.formatbranchinput.addItem("CSV")
+        self.formatbranchinput.addItem("JSON")
+        self.formatbranchinput.addItem("XLSX")
+
 
         QBtnSave = QPushButton("Сохранить")
         QBtnSave.clicked.connect(self.add_save)
@@ -65,14 +69,14 @@ class WidgetGallery(QDialog):
         layout.addWidget(nameStr)
         layout.addWidget(self.nameinput)
         layout.addWidget(nameStrForm)
-        layout.addWidget(self.branchinput)
+        layout.addWidget(self.formatbranchinput)
         layout.addWidget(QBtnSave)
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
     def add_save(self):
         name = self.nameinput.text()
-        branch = self.branchinput.itemText(self.branchinput.currentIndex())
+        branch = self.formatbranchinput.itemText(self.formatbranchinput.currentIndex())
         try:
             if branch == "CSV":
                 csvWriter = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
@@ -86,6 +90,11 @@ class WidgetGallery(QDialog):
             if branch == "JSON":
                 conn = sqlite3.connect('Result.db')
                 pd.read_sql_query('SELECT * FROM Result', conn).to_json(name + '.json')
+
+            if branch == "XLSX":
+                self.conn = sqlite3.connect('Result.db')
+                pd.read_sql_query('SELECT * FROM Result', self.conn).to_excel(name + '.xlsx',
+                    header=['Название', 'Город', 'Компания', 'Ключевые навыки'], index=False)
 
             QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
         except Exception:
@@ -217,7 +226,7 @@ class WidgetGallery(QDialog):
                     'Новгородская область': 1051, 'Ростовская область': 1530}
         k = listArea.keys()
         name = self.nameinput.text()
-        branch = self.branchinput.itemText(self.branchinput.currentIndex())
+        branch = self.branchinput.itemText(self.formatbranchinput.currentIndex())
         for el in k:
             if el == branch:
                 n = listArea[el]
