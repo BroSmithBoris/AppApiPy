@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QComboBox,
                              QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
                              QProgressBar, QPushButton, QSizePolicy,
                              QStyleFactory, QTableWidget, QTabWidget,
-                             QVBoxLayout, QWidget, QTableWidgetItem, QMessageBox)
+                             QVBoxLayout, QWidget, QTableWidgetItem, QMessageBox,QHeaderView)
 import sqlite3
 import concurrent
 import time
@@ -143,6 +143,9 @@ class WidgetGallery(QDialog):
         self.tableWidget.horizontalHeader().setCascadingSectionResizes(True)
         self.tableWidget.horizontalHeader().setSortIndicatorShown(False)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.verticalHeader().Stretch
+        self.tableWidget.verticalHeader().ResizeToContents
+        self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.tableWidget.verticalHeader().setVisible(True)
         self.tableWidget.verticalHeader().setCascadingSectionResizes(True)
         self.tableWidget.verticalHeader().setStretchLastSection(False)
