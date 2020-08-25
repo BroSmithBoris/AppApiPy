@@ -80,7 +80,7 @@ class WidgetGallery(QDialog):
     def create_bottom_left_tab_widget(self):
         self.connect_ = sqlite3.connect(r'Result.db')
         self.cursor = self.connect_.cursor()
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS Result(id TEXT, name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
         self.cursor.close()
         self.bottom_left_tab_widget = QGroupBox()
         self.bottom_left_tab_widget.setSizePolicy(QSizePolicy.Preferred,
@@ -88,7 +88,7 @@ class WidgetGallery(QDialog):
 
         self.table_widget = QTableWidget()
         self.table_widget.setAlternatingRowColors(True)
-        self.table_widget.setColumnCount(4)
+        self.table_widget.setColumnCount(5)
         self.table_widget.horizontalHeader().setCascadingSectionResizes(True)
         self.table_widget.horizontalHeader().setSortIndicatorShown(False)
         self.table_widget.horizontalHeader().setStretchLastSection(True)
@@ -98,7 +98,7 @@ class WidgetGallery(QDialog):
         self.table_widget.verticalHeader().setVisible(True)
         self.table_widget.verticalHeader().setCascadingSectionResizes(True)
         self.table_widget.verticalHeader().setStretchLastSection(False)
-        self.table_widget.setHorizontalHeaderLabels(("Название", "Город", "Компания", "Ключевые навыки"))
+        self.table_widget.setHorizontalHeaderLabels(("ID", "Название", "Город", "Компания", "Ключевые навыки"))
         self.load_data()
         table_h_box = QHBoxLayout()
         table_h_box.addWidget(self.table_widget)

@@ -27,7 +27,7 @@ class SaveVacancy(object):
 
             elif branch == "XLSX":
                 pd.read_sql_query("SELECT * FROM Result", connect_).to_excel(name + '.xlsx',
-                                                                             header=['Название', 'Город',
+                                                                             header=['ID', 'Название', 'Город',
                                                                                      'Компания',
                                                                                      'Ключевые навыки'],
                                                                              index=False)

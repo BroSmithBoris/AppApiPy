@@ -11,8 +11,6 @@ class RequestVacancy(object):
         self.URL = URL
 
     def request_items(self, page):
-        if not self.stop_flag:
-            return
         _vacancy_id_list = []
         _par = {'text': self.vacancy_name, 'area': self.area, 'per_page': '100', 'page': page}
         try:
@@ -26,8 +24,6 @@ class RequestVacancy(object):
             pool.map(self.request_vacancy_id, _vacancy_id_list)
 
     def request_vacancy_id(self, vacancy_url):
-        if not self.stop_flag:
-            return
         try:
             _vacancy = requests.get(vacancy_url)
             assert (_vacancy.status_code == 200), ("Ошибка, Код ответа: ", _vacancy.status_code, vacancy_url)
@@ -43,8 +39,10 @@ class RequestVacancy(object):
                 if _skill is not None:
                     _key_skills_string += _skill + ', '
 
-            self.connect_.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                                  (_vacancy['name'], _vacancy['area']['name'], _vacancy['employer']['name'],
+            self.connect_.execute("INSERT INTO Result (id,name,area,employer,keySkills) VALUES (?,?,?,?,?)",
+                                  (_vacancy['id'], _vacancy['name'],
+                                   _vacancy['area']['name'],
+                                   _vacancy['employer']['name'],
                                    _key_skills_string))
 
     def request(self, vacancy_name, area):
