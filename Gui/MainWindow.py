@@ -38,7 +38,8 @@ class WidgetGallery(QDialog):
         self.setWindowTitle("HH API")
         self.setMinimumSize(800, 600)
         self.setWindowIcon(QIcon(r'Images\Иконка.png'))
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint
+        self.setWindowFlags(self.windowFlags()
+                            | QtCore.Qt.WindowMinimizeButtonHint
                             | QtCore.Qt.WindowMaximizeButtonHint)
 
     def create_top_left_group_box(self):
@@ -136,8 +137,7 @@ class WidgetGallery(QDialog):
 
     def add_work(self):
         self.request_vacancy.request(self.vacancy_name_input.text(),
-                                     self.AREA_LIST[self.region_branch_input.currentIndex()],
-                                     )
+                                     self.AREA_LIST[self.region_branch_input.currentIndex()])
         self.load_data()
 
     def add_save(self):
