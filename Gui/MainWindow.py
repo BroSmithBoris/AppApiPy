@@ -1,26 +1,23 @@
-import csv
-import xlsxwriter
-import pandas as pd
-import requests
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QTextDocument, QTextCursor, QIcon
-from PyQt5.QtWidgets import (QApplication, QComboBox,
-                             QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-                             QProgressBar, QPushButton, QSizePolicy,
-                             QStyleFactory, QTableWidget, QTabWidget,
-                             QVBoxLayout, QWidget, QTableWidgetItem, QMessageBox, QHeaderView)
+from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QComboBox, QDialog, QGridLayout, \
+    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, \
+    QSizePolicy, QTableWidget, QVBoxLayout, QTableWidgetItem, \
+    QHeaderView
 import sqlite3
-import concurrent
-import time
-import concurrent.futures
-from sqlite3worker import Sqlite3Worker
-from Func import Help
+from Gui import Help
+from Func import Request, Save, Clear
 
 
 class WidgetGallery(QDialog):
     def __init__(self, parent=None):
         super(WidgetGallery, self).__init__(parent)
+        self.AREA_LIST = [1261, 1, 1308, 1051, 1530]
+        self.URL = r'https://api.hh.ru/vacancies/'
+
+        self.request_vacancy = Request.RequestVacancy(self.URL)
+        self.save_vacancy = Save.SaveVacancy()
+        self.clear_vacancy = Clear.ClearVacancy()
 
         self.create_top_left_group_box()
         self.create_top_right_group_box()
@@ -38,25 +35,25 @@ class WidgetGallery(QDialog):
         main_layout.setColumnStretch(1, 1)
         self.setLayout(main_layout)
 
-        self.setWindowTitle("HH API")
+        self.setWindowTitle(r"HH API")
         self.setMinimumSize(800, 600)
-        self.setWindowIcon(QIcon("Images\Иконка.png"))
+        self.setWindowIcon(QIcon(r"Images\Иконка.png"))
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint
                             | QtCore.Qt.WindowMaximizeButtonHint)
 
     def create_top_left_group_box(self):
-        self.top_left_group_box = QGroupBox("Сохранение")
+        self.top_left_group_box = QGroupBox(r"Сохранение")
 
         name_str = QLabel()
-        name_str.setText("Имя файла:")
+        name_str.setText(r"Имя файла:")
         self.save_name_input = QLineEdit()
-        self.save_name_input.setPlaceholderText("Имя")
+        self.save_name_input.setPlaceholderText(r"Имя")
         name_str_form = QLabel()
-        name_str_form.setText("Формат:")
+        name_str_form.setText(r"Формат:")
         self.format_branch_input = QComboBox()
-        self.format_branch_input.addItem("CSV")
-        self.format_branch_input.addItem("JSON")
-        self.format_branch_input.addItem("XLSX")
+        self.format_branch_input.addItem(r"CSV")
+        self.format_branch_input.addItem(r"JSON")
+        self.format_branch_input.addItem(r"XLSX")
 
         button_save = QPushButton("Сохранить")
         button_save.clicked.connect(self.add_save)
@@ -69,35 +66,6 @@ class WidgetGallery(QDialog):
         layout.addStretch(1)
         self.top_left_group_box.setLayout(layout)
 
-    def add_save(self):
-        _name = self.save_name_input.text()
-        _branch = self.format_branch_input.itemText(self.format_branch_input.currentIndex())
-        try:
-            if _branch == "CSV":
-                _csv_writer = csv.writer(open(_name + '.csv', 'w', newline=''), delimiter=';')
-                _connect = sqlite3.connect('Result.db')
-                _cursor = _connect.cursor()
-                _cursor.execute("SELECT * FROM Result")
-                for row in _cursor.fetchall():
-                    _csv_writer.writerow(row)
-
-            elif _branch == "JSON":
-                _connect = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', _connect).to_json(_name + '.json')
-
-            elif _branch == "XLSX":
-                self.connect_ = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result', self.connect_).to_excel(_name + '.xlsx',
-                                                                                  header=['Название', 'Город',
-                                                                                          'Компания',
-                                                                                          'Ключевые навыки'],
-                                                                                  index=False)
-
-            QMessageBox.information(QMessageBox(), 'Успешно!', 'Сохранено')
-        except Exception as exception_:
-            print(exception_)
-            QMessageBox.warning(QMessageBox(), 'Ошибка!', 'Не удалось сохранить')
-
     def create_top_right_group_box(self):
         self.top_right_group_box = QGroupBox()
 
@@ -108,21 +76,6 @@ class WidgetGallery(QDialog):
         layout.addWidget(default_push_button)
         layout.addStretch(1)
         self.top_right_group_box.setLayout(layout)
-
-    def delete_all_works(self):
-        _message = 'Вы уверены, что хотите продолжить?'
-        _reply = QtWidgets.QMessageBox.question(self, 'Уведомление', _message,
-                                                QtWidgets.QMessageBox.Yes,
-                                                QtWidgets.QMessageBox.No)
-
-        if _reply == QtWidgets.QMessageBox.Yes:
-            self.connect_ = sqlite3.connect("Result.db")
-            self.cursor = self.connect_.cursor()
-            self.cursor.execute("DELETE from Result")
-            self.connect_.commit()
-            self.connect_.close()
-            self.load_data()
-            QMessageBox.information(QMessageBox(), 'Успешно!', 'Вакансии удалены')
 
     def create_bottom_left_tab_widget(self):
         self.connect_ = sqlite3.connect("Result.db")
@@ -151,10 +104,6 @@ class WidgetGallery(QDialog):
         table_h_box.addWidget(self.table_widget)
         self.bottom_left_tab_widget.setLayout(table_h_box)
 
-    def about(self):
-        dialog = Help.AboutDialog()
-        dialog.exec_()
-
     def create_bottom_right_group_box(self):
         self.bottom_right_group_box = QGroupBox("Добавить вакансии")
 
@@ -181,48 +130,25 @@ class WidgetGallery(QDialog):
         layout.setRowStretch(5, 1)
         self.bottom_right_group_box.setLayout(layout)
 
+    def delete_all_works(self):
+        if self.clear_vacancy.clear():
+            self.load_data()
+
     def add_work(self):
-        def request_items(page):
-            _vacancy_id_list = []
-            _par = {'text': vacancy_name, 'area': area, 'per_page': '100', 'page': page}
-            try:
-                _vacancy_description_list = requests.get(url, params=_par).json()['items']
-            except KeyError:
-                return
-            for _vacancy_description in _vacancy_description_list:
-                _vacancy_id_list.append(url + _vacancy_description['id'])
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
-                pool.map(request_vacancy_id, _vacancy_id_list)
-
-        def request_vacancy_id(vacancy_url):
-            try:
-                _vacancy = requests.get(vacancy_url)
-                assert (_vacancy.status_code == 200), ("Ошибка, Код ответа: ", _vacancy.status_code, vacancy_url)
-            except Exception as exception_:
-                print(exception_)
-                time.sleep(5)
-                return request_vacancy_id(vacancy_url)
-            else:
-                _key_skills_string = ''
-                _vacancy = _vacancy.json()
-                for _key_skill in _vacancy['key_skills']:
-                    _skill = _key_skill['name']
-                    if _skill is not None:
-                        _key_skills_string += _skill + ', '
-
-                self.connect_.execute("INSERT INTO Result (name,area,employer,keySkills) VALUES (?,?,?,?)",
-                                      (_vacancy['name'], _vacancy['area']['name'], _vacancy['employer']['name'],
-                                       _key_skills_string))
-
-        _area_list = [1261, 1, 1308, 1051, 1530]
-        vacancy_name = self.vacancy_name_input.text()
-        area = _area_list[self.region_branch_input.currentIndex()]
-        url = 'https://api.hh.ru/vacancies/'
-        self.connect_ = Sqlite3Worker("Result.db")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
-            pool.map(request_items, range(20))
-        self.connect_.close()
+        self.request_vacancy.request(self.vacancy_name_input.text(),
+                                     self.AREA_LIST[self.region_branch_input.currentIndex()],
+                                     )
         self.load_data()
+
+    def add_save(self):
+        _name = self.save_name_input.text()
+        _branch = self.format_branch_input.itemText(self.format_branch_input.currentIndex())
+        self.save_vacancy.save(self.save_name_input.text(),
+                               self.format_branch_input.itemText(self.format_branch_input.currentIndex()))
+
+    def about(self):
+        dialog = Help.AboutDialog()
+        dialog.exec()
 
     def load_data(self):
         self.connect_ = sqlite3.connect("Result.db")

@@ -1,61 +1,36 @@
-import sqlite3
 import csv
-import os
+import xlsxwriter
 import pandas as pd
-import json
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog, QPushButton, QVBoxLayout, QLabel, QLineEdit, QComboBox, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
+import sqlite3
 
 
-class SaveDialog(QDialog):
+class SaveVacancy(object):
 
-    def __init__(self, *args, **kwargs):
-        super(SaveDialog, self).__init__(*args, **kwargs)
-
-        self.QBtn = QPushButton()
-        self.QBtn.setText("Сохранить")
-        self.setWindowTitle("Сохранить")
-        self.setWindowIcon(QIcon("Images\помощь.png"))
-        self.setFixedWidth(300)
-        self.setFixedHeight(250)
-        self.QBtn.clicked.connect(self.addSave)
-        layout = QVBoxLayout()
-
-        self.nameStr = QLabel()
-        self.nameStr.setText("Имя файла:")
-        self.nameinput = QLineEdit()
-        self.nameinput.setPlaceholderText("Имя")
-        layout.addWidget(self.nameStr)
-        layout.addWidget(self.nameinput)
-
-        self.nameStr = QLabel()
-        self.nameStr.setText("Формат:")
-        self.branchinput = QComboBox()
-        self.branchinput.addItem("CSV")
-        self.branchinput.addItem("JSON")
-        layout.addWidget(self.nameStr)
-        layout.addWidget(self.branchinput)
-
-        layout.addWidget(self.QBtn)
-        self.setLayout(layout)
-
-    def addSave(self):
-        name = self.nameinput.text()
-        branch = self.branchinput.itemText(self.branchinput.currentIndex())
+    def save(self, name, branch):
+        name = name
+        branch = branch
+        connect_ = sqlite3.connect('Result.db')
         try:
-            if branch=="CSV":
-                csvWriter = csv.writer(open(name+'.csv', 'w', newline=''),delimiter=';')
-                conn = sqlite3.connect('Result.db')
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Result")
-                rows = cursor.fetchall()
-                for row in rows:
-                    csvWriter.writerow(row)
+            if branch == "CSV":
+                _csv_writer = csv.writer(open(name + '.csv', 'w', newline=''), delimiter=';')
+                _cursor = connect_.cursor()
+                _cursor.execute("SELECT * FROM Result")
+                for row in _cursor.fetchall():
+                    _csv_writer.writerow(row)
 
-            if branch =="JSON":
-                conn = sqlite3.connect('Result.db')
-                pd.read_sql_query('SELECT * FROM Result',conn).to_json(name+'.json')
+            elif branch == "JSON":
+                pd.read_sql_query('SELECT * FROM Result', connect_).to_json(name + '.json')
 
-            QMessageBox.information(QMessageBox(), 'Successful', 'Сохранено')
-        except Exception:
-            QMessageBox.warning(QMessageBox(), 'Error', 'Не удалось сохранить')
+            elif branch == "XLSX":
+                pd.read_sql_query('SELECT * FROM Result', connect_).to_excel(name + '.xlsx',
+                                                                             header=['Название', 'Город',
+                                                                                     'Компания',
+                                                                                     'Ключевые навыки'],
+                                                                             index=False)
+
+            QMessageBox.information(QMessageBox(), 'Успешно!', 'Сохранено')
+        except Exception as exception_:
+            print(exception_)
+            QMessageBox.warning(QMessageBox(), 'Ошибка!', 'Не удалось сохранить')
+        connect_.close()
