@@ -38,7 +38,8 @@ class RequestVacancy(object):
                 _skill = _key_skill['name']
                 if _skill is not None:
                     _key_skills_string += _skill + ', '
-
+            if len(_key_skills_string) > 0:
+                _key_skills_string = _key_skills_string[:-2]
             self.connect_.execute("INSERT INTO Result (id,name,area,employer,keySkills) VALUES (?,?,?,?,?)",
                                   (_vacancy['id'], _vacancy['name'],
                                    _vacancy['area']['name'],
