@@ -2,6 +2,7 @@ import requests
 import concurrent
 import time
 import concurrent.futures
+
 from sqlite3worker import Sqlite3Worker
 
 
@@ -10,11 +11,14 @@ class RequestVacancy(object):
         self.URL = URL
 
     def request_items(self, page):
+        if not self.stop_flag:
+            return
         _vacancy_id_list = []
         _par = {'text': self.vacancy_name, 'area': self.area, 'per_page': '100', 'page': page}
         try:
             _vacancy_description_list = requests.get(self.URL, params=_par).json()['items']
-        except KeyError:
+        except KeyError as exception_:
+            print(exception_)
             return
         for _vacancy_description in _vacancy_description_list:
             _vacancy_id_list.append(self.URL + _vacancy_description['id'])
@@ -22,6 +26,8 @@ class RequestVacancy(object):
             pool.map(self.request_vacancy_id, _vacancy_id_list)
 
     def request_vacancy_id(self, vacancy_url):
+        if not self.stop_flag:
+            return
         try:
             _vacancy = requests.get(vacancy_url)
             assert (_vacancy.status_code == 200), ("Ошибка, Код ответа: ", _vacancy.status_code, vacancy_url)
@@ -45,7 +51,7 @@ class RequestVacancy(object):
         self.vacancy_name = vacancy_name
         self.area = area
 
-        self.connect_ = Sqlite3Worker("Result.db")
+        self.connect_ = Sqlite3Worker(r'Result.db')
         with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
             pool.map(self.request_items, range(20))
         self.connect_.close()

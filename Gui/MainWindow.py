@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QComboBox, QDialog, QGridLayout, \
     QSizePolicy, QTableWidget, QVBoxLayout, QTableWidgetItem, \
     QHeaderView
 import sqlite3
-from Gui import Help
+from Gui import Help, Message
 from Func import Request, Save, Clear
 
 
@@ -14,7 +14,7 @@ class WidgetGallery(QDialog):
         super(WidgetGallery, self).__init__(parent)
         self.AREA_LIST = [1261, 1, 1308, 1051, 1530]
         self.URL = r'https://api.hh.ru/vacancies/'
-
+        self.messages = Message.MessageWindow()
         self.request_vacancy = Request.RequestVacancy(self.URL)
         self.save_vacancy = Save.SaveVacancy()
         self.clear_vacancy = Clear.ClearVacancy()
@@ -35,25 +35,25 @@ class WidgetGallery(QDialog):
         main_layout.setColumnStretch(1, 1)
         self.setLayout(main_layout)
 
-        self.setWindowTitle(r"HH API")
+        self.setWindowTitle("HH API")
         self.setMinimumSize(800, 600)
-        self.setWindowIcon(QIcon(r"Images\Иконка.png"))
+        self.setWindowIcon(QIcon(r'Images\Иконка.png'))
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint
                             | QtCore.Qt.WindowMaximizeButtonHint)
 
     def create_top_left_group_box(self):
-        self.top_left_group_box = QGroupBox(r"Сохранение")
+        self.top_left_group_box = QGroupBox("Сохранение")
 
         name_str = QLabel()
-        name_str.setText(r"Имя файла:")
+        name_str.setText("Имя файла:")
         self.save_name_input = QLineEdit()
-        self.save_name_input.setPlaceholderText(r"Имя")
+        self.save_name_input.setPlaceholderText("Имя")
         name_str_form = QLabel()
-        name_str_form.setText(r"Формат:")
+        name_str_form.setText("Формат:")
         self.format_branch_input = QComboBox()
-        self.format_branch_input.addItem(r"CSV")
-        self.format_branch_input.addItem(r"JSON")
-        self.format_branch_input.addItem(r"XLSX")
+        self.format_branch_input.addItem("CSV")
+        self.format_branch_input.addItem("JSON")
+        self.format_branch_input.addItem("XLSX")
 
         button_save = QPushButton("Сохранить")
         button_save.clicked.connect(self.add_save)
@@ -78,7 +78,7 @@ class WidgetGallery(QDialog):
         self.top_right_group_box.setLayout(layout)
 
     def create_bottom_left_tab_widget(self):
-        self.connect_ = sqlite3.connect("Result.db")
+        self.connect_ = sqlite3.connect(r'Result.db')
         self.cursor = self.connect_.cursor()
         self.cursor.execute("CREATE TABLE IF NOT EXISTS Result(name TEXT,area TEXT,employer TEXT,keySkills TEXT)")
         self.cursor.close()
@@ -151,7 +151,7 @@ class WidgetGallery(QDialog):
         dialog.exec()
 
     def load_data(self):
-        self.connect_ = sqlite3.connect("Result.db")
+        self.connect_ = sqlite3.connect(r'Result.db')
         _result = self.connect_.execute("SELECT * FROM Result")
         self.table_widget.setRowCount(0)
         for row_number, row_data in enumerate(_result):
