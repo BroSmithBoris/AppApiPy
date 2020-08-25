@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 import sqlite3
 from Gui import Message
 
+
 class SaveVacancy(object):
     def __init__(self):
         self.messages = Message.MessageWindow()
@@ -30,7 +31,8 @@ class SaveVacancy(object):
                                                                              header=['ID', 'Название', 'Город',
                                                                                      'Компания',
                                                                                      'Ключевые навыки'],
-                                                                             index=False)
+                                                                             index=False,
+                                                                             engine='xlsxwriter')
             self.messages.show_message_window(QMessageBox.Information,
                                               QIcon(r'Images\Добавить.png'),
                                               "Успешно!",
